@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>双师测试平台 | API接口测试</title>
+<meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
+<meta name="description" content="Developed By M Abdur Rokib Promy">
+<meta name="keywords" content="Admin, Bootstrap 3, Template, Theme, Responsive">
+<body class="skin-black">
+<header class="header"> <a href="/" class="logo">双师测试平台</a>
+  <nav class="navbar navbar-static-top" role="navigation"> <span class="sr-only">www.100tal.com</span></a>
+    <div class="navbar-right">
+      <ul class="nav navbar-nav">
+      </ul>
+    </div>
+  </nav>
+  {% load staticfiles %} 
+  <script>	
+	</script> 
+</header>
+<div class="wrapper">
+  <hr>
+  <aside class="left-side">
+    <section class="sidebar" align="left">
+      <ul class="sidebar-menu">
+        <li> <a href="/api"> <i class="fa fa-dashboard"></i> <span>接口自动化</span> </a></li>
+      </ul>
+    </section>
+  </aside>
+  <aside class="right-side">
+    <section class="content">
+      <div class="row">
+        <div class="col-md-8" style="width:100%">
+          <section class="panel">
+            <header class="panel-heading" style="color:#F00"> 注：无 </header>           
+            <input type="button" name="runtest" id="runtest" value="添加" onClick="add()">
+            <input type="button" name="runtest" id="runtest" value="运行" onClick="run()">
+            
+            <div class="modal ">
+          </section>
+        </div>
+      </div>
+      <form id="form1" name="form1" method="post" action="">
+        {% csrf_token %}
+        <table width="521" border="0" class="table table-bordered">
+        <tbody>
+          <tr>
+            <td width="151">序号</td>
+            <td width="151">参数</td>
+            <td width="383">校验类型</td>
+            <td width="383">校验内容</td>
+          </tr>
+          {% for i in result %}
+          <tr>
+            <td width="151"></td>
+            <td width="151"></td>
+            <td width="383"></td>
+            <td width="383"></td>
+          </tr>
+          {% endfor %}
+          <tbody>
+        </table>
+      </form>
+    
+      <div id="status">{{ status }}</div>
+      <!-- row end --> 
+    </section>
+    <!-- /.content -->
+    <div class="footer-main"> Copyright &copy Director, 2017. <a href="http://www.100tal.com/" target="_blank" title="好未来教育集团">好未来教育集团</a>
+  </aside>
+</div>
+
+</body>
+</html>

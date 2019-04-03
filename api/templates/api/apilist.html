@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>双师测试平台</title>
+    <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../static/css/bootstrap-table.css" rel="stylesheet">
+    <script src="../static/js/jquery-3.2.1.min.js"></script>
+    <script src="../static/js/bootstrap.min.js"></script>
+    <script src="../static/js/bootstrap-table.js"></script>
+    <script src="../static/js/jquery.tablednd.js"></script>
+    <script src="../static/js/bootstrap-table-reorder-rows.js"></script>
+    <script src="../static/js/bootstrap-table-zh-CN.js"></script>
+    <style type="text/css">
+      .table{
+            table-layout: fixed;
+            }
+        .loadEffect {
+            width: 80px;
+            height: 40px;
+            margin: 0 auto;
+            margin-top: 30px;
+        }
+
+        .loadEffect span {
+            display: inline-block;
+            width: 8px;
+            height: 100%;
+            border-radius: 4px;
+            background: lightgreen;
+            -webkit-animation: load 1s ease infinite;
+        }
+
+        @-webkit-keyframes load {
+            0%,
+            100% {
+                height: 40px;
+                background: lightgreen;
+            }
+            50% {
+                height: 70px;
+                margin: -15px 0;
+                background: lightblue;
+            }
+        }
+
+        .loadEffect span:nth-child(2) {
+            -webkit-animation-delay: 0.2s;
+        }
+
+        .loadEffect span:nth-child(3) {
+            -webkit-animation-delay: 0.4s;
+        }
+
+        .loadEffect span:nth-child(4) {
+            -webkit-animation-delay: 0.6s;
+        }
+
+        .loadEffect span:nth-child(5) {
+            -webkit-animation-delay: 0.8s;
+        }
+
+        .btn-circle {
+            width: 100px;
+            height: 40px;
+            text-align: center;
+            padding: 6px 0;
+            font-size: 16px;
+            border-radius: 15px;
+        }
+
+        td{ word-break: break-all; }
+    </style>
+    <script type="text/javascript">
+    $(function() {
+        $('#case').text("{{ name|safe }}");
+        $('#table').bootstrapTable({
+            data: {{ data | safe }},
+            sortOrder: "asc",
+            striped: true,
+            cache: false,
+            sidePagination: "client",
+            columns: [{
+                field: 'params',
+                title: '请求参数',
+            }, {
+                field: 'body',
+                title: '请求内容',
+            }, {
+                field: 'restype',
+                title: '校验类型',
+            }, {
+                field: 'response',
+                title: '校验内容',
+            },{
+                field: 'name',
+                title: '获取参数名',
+            }, {
+                field: 're',
+                title: '参数获取',
+            }, {
+                field: 'price',
+                title: '操作',
+                width: '180',
+                formatter: function(value, row, index) {
+                    return [
+                        '<button type="button" class="btn btn-primary btn-xs" onclick="edit(\'' + row.seqid + '\')">编辑</button> &nbsp;',
+                        '<button type="button" class="btn btn-primary btn-xs" onclick="del(this,' + index + ')">删除</button> &nbsp;',
+                        '<button type="button" class="btn btn-primary btn-xs" onclick="cruncase(\'' + row.seqid + '\')">调试</button>',
+                    ].join('');
+                    // var e = '<a onclick="edit(\'' + row.name + '\',\'' + row.url + '\',\'' + row.type + '\')" style="cursor:pointer;">编辑</a> ';
+                    // var d = '<a onclick="del(\'' + row.name + '\')" style="cursor:pointer;">删除</a> ';
+                    // var f = '<a onclick="caselist(\'' + row.name + '\')" style="cursor:pointer;">用例</a> ';
+                    // return e + d + f;
+                }
+            }],
+        });
+
+        $('#table_pre').bootstrapTable({
+            data: {{ data_param | safe }},
+            // dataType: "json",
+            // contentType:"application/x-www-form-urlencoded; charset=UTF-8",
+            // method: 'post',
+            // queryParams: {name: '{{name}}','csrfmiddlewaretoken': '{{ csrf_token }}'},
+            sortOrder: "asc",
+            striped: true,
+            cache: false,
+            sidePagination: "client",
+            columns: [{
+                field: 'name',
+                title: '获取参数名',
+            }, {
+                field: 'url',
+                title: '请求路径',
+            }, {
+                field: 'type',
+                title: '请求类型',
+            }, {
+                field: 'header',
+                title: '请求头',
+            }, {
+                field: 'params',
+                title: '请求参数',
+            }, {
+                field: 'body',
+                title: '请求内容',
+            }, {
+                field: 're',
+                title: '参数获取',
+            }, {
+                field: 'price',
+                title: '操作',
+                width: '180',
+                formatter: function(value, row, index) {
+                    return [
+                        '<button type="button" class="btn btn-primary btn-xs" onclick="pedit(\'' + row.seqid + '\')">编辑</button> &nbsp;',
+                        '<button type="button" class="btn btn-primary btn-xs" onclick="pdel(this,' + index + ')">删除</button> &nbsp;',
+                        '<button type="button" class="btn btn-primary btn-xs" onclick="pruncase(\'' + row.seqid + '\')">调试</button>',
+                    ].join('');
+                    // var e = '<a onclick="edit(\'' + row.name + '\',\'' + row.url + '\',\'' + row.type + '\')" style="cursor:pointer;">编辑</a> ';
+                    // var d = '<a onclick="del(\'' + row.name + '\')" style="cursor:pointer;">删除</a> ';
+                    // var f = '<a onclick="caselist(\'' + row.name + '\')" style="cursor:pointer;">用例</a> ';
+                    // return e + d + f;
+                }
+            }],
+        });
+        $('#table_pc').bootstrapTable({
+            data: {{ data_postcon | safe }},
+            // dataType: "json",
+            // contentType:"application/x-www-form-urlencoded; charset=UTF-8",
+            // method: 'post',
+            // queryParams: {name: '{{name}}','csrfmiddlewaretoken': '{{ csrf_token }}'},
+            sortOrder: "asc",
+            striped: true,
+            cache: false,
+            sidePagination: "client",
+            columns: [{
+                field: 'name',
+                title: '接口名',
+            }, {
+                field: 'url',
+                title: '请求路径',
+            }, {
+                field: 'type',
+                title: '请求类型',
+            }, {
+                field: 'header',
+                title: '请求头',
+            }, {
+                field: 'params',
+                title: '请求参数',
+            }, {
+                field: 'body',
+                title: '请求内容',
+            }, {
+                field: 'time',
+                title: '执行次数',
+            }, {
+                field: 'price',
+                title: '操作',
+                width: '180',
+                formatter: function(value, row, index) {
+                    return [
+                        '<button type="button" class="btn btn-primary btn-xs" onclick="pcedit(\'' + row.seqid + '\')">编辑</button> &nbsp;',
+                        '<button type="button" class="btn btn-primary btn-xs" onclick="pcdel(this,' + index + ')">删除</button> &nbsp;',
+                        '<button type="button" class="btn btn-primary btn-xs" onclick="pcruncase(\'' + row.seqid + '\')">调试</button>',
+                    ].join('');
+                    // var e = '<a onclick="edit(\'' + row.name + '\',\'' + row.url + '\',\'' + row.type + '\')" style="cursor:pointer;">编辑</a> ';
+                    // var d = '<a onclick="del(\'' + row.name + '\')" style="cursor:pointer;">删除</a> ';
+                    // var f = '<a onclick="caselist(\'' + row.name + '\')" style="cursor:pointer;">用例</a> ';
+                    // return e + d + f;
+                }
+            }],
+        });
+
+        $('#table_caseresult').bootstrapTable({
+            sortOrder: "asc",
+            striped: true,
+            cache: false,
+            sidePagination: "client",
+            pageSize: 10,
+            pagination: true,
+            columns: [{
+                field: 'name',
+                title: '名称'
+            }, {
+                field: 'seqid',
+                title: '序号'
+            }, {
+                field: 'result',
+                title: '结果'
+            }, {
+                field: 'response',
+                title: '返回内容',
+                width: '50%'
+            },{
+                field: 'pname',
+                title: '参数名称',
+            }, {
+                field: 're',
+                title: '参数获取结果',
+                width: '20%'
+            }],
+        });
+
+        $('#table_paramresult').bootstrapTable({
+            sortOrder: "asc",
+            striped: true,
+            cache: false,
+            sidePagination: "client",
+            pageSize: 10,
+            pagination: true,
+            columns: [{
+                field: 'name',
+                title: '参数名称',
+            }, {
+                field: 'result',
+                title: '结果'
+            }],
+        });
+        $('#table_pcresult').bootstrapTable({
+            sortOrder: "asc",
+            striped: true,
+            cache: false,
+            sidePagination: "client",
+            pageSize: 10,
+            pagination: true,
+            columns: [{
+                field: 'res',
+                title: '结果',
+            }],
+        });
+        $('#table_common').bootstrapTable({
+            data: {{ data_common | safe }},
+            sortOrder: "asc",
+            striped: true,
+            cache: false,
+            sidePagination: "client",
+            columns: [{
+                field: 'id',
+                title: '参数id值',
+                visible: false
+            },{
+                field: 'key',
+                title: '参数key值',
+            },{
+                field: 'value',
+                title: '参数value值',
+            }],
+            });
+            $('#table_procomm').bootstrapTable({
+            data: {{ data_procommon | safe }},
+            sortOrder: "asc",
+            striped: true,
+            cache: false,
+            sidePagination: "client",
+            columns: [{
+                field: 'id',
+                title: '参数id值',
+                visible: false
+            },{
+                field: 'key',
+                title: '参数key值',
+            }, {
+                field: 'value',
+                title: '参数value值',
+            }],
+            });
+        //输入后置条件接口名之后查找在项目中是否已经有改接口信息，如有直接导入
+        $("#pcname").blur(function () {
+            var name=$("#pcname").val();
+            if (name.length>0){
+                $.ajax({
+                    url:"api",
+                    type:"get",
+                    data:{name:name,cid:"{{ id }}"},
+                    success:function (data) {
+                        console.log(data);
+                        if(!$.isEmptyObject(data)){
+                            $("#pcurl").val(data.url);
+                            $("#pctype").val(data.type);
+                            $("#pcheader").val(data.header);
+                            $("#pcparam").val(data.param[0]);
+                            $("#pcbody").val(data.body[0]);
+                        }
+                    }});
+            }
+        });
+        $("input,textarea").blur(function(){
+            //alert($(this).getCursorPosition());
+            var str=$(this).val();
+            var tmp = "";
+            for(var i=0;i<str.length;i++){
+                //将全角空格转化为半角空格
+                if (str.charCodeAt(i) == 12288){
+                    tmp += String.fromCharCode(str.charCodeAt(i)-12256);
+                    continue;
+                }
+                //将‘转化为'
+                if (str.charCodeAt(i) == 8216){
+                    tmp += String.fromCharCode(str.charCodeAt(i)-8177);
+                    continue;
+                }
+                //将’转化为'
+                if (str.charCodeAt(i) == 8217){
+                    tmp += String.fromCharCode(str.charCodeAt(i)-8178);
+                    continue;
+                }
+                //将“转化为"
+                if (str.charCodeAt(i) == 8220){
+                    tmp += String.fromCharCode(str.charCodeAt(i)-8186);
+                    continue;
+                }
+                //将”转化为"
+                if (str.charCodeAt(i) == 8221){
+                    tmp += String.fromCharCode(str.charCodeAt(i)-8187);
+                    continue;
+                }
+                //将。转化为.
+                if (str.charCodeAt(i) == 12290){
+                    tmp += String.fromCharCode(str.charCodeAt(i)-12244);
+                    continue;
+                }
+                //其他符号转化为半角
+                if(str.charCodeAt(i) > 65280 && str.charCodeAt(i) < 65375){
+                    tmp += String.fromCharCode(str.charCodeAt(i)-65248);
+                }
+                else{
+                    tmp += String.fromCharCode(str.charCodeAt(i));
+                }
+            }
+            $(this).val(tmp)
+        });
+        //进入模态框，鼠标定位到第一个元素中
+        $("#paramadd,#add,#postcon,#paramimport,#postconimport").on('shown.bs.modal',function () {
+                var modal = $(this);
+                var ele=modal.find('.modal-body :text').first();
+                ele.focus();
+            });
+        //导入的时候单击回车，直接触发导入按钮
+        $("#paramimport").keydown(function(e){
+                if(e.keyCode==13){
+                    $("#pimport").trigger("click");
+                    event.preventDefault();//禁用默认回车事件
+                }
+            });
+        $("#postconimport").keydown(function(e){
+                if(e.keyCode==13){
+                    $("#import").trigger("click");
+                    event.preventDefault();//禁用默认回车事件
+                }
+            });
+    });
+
+    function casesubmit(x) {
+        if (x == 'add') {
+            $.ajax({
+                type: "post",
+                url: "case",
+                data: {
+                    opt: "add",
+                    name: "{{ id }}",
+                    params: $('#params').val(),
+                    body: $('#body').val(),
+                    restype: $('#restype').val(),
+                    response: $('#response').val(),
+                    pname:$('#name').val(),
+                    re:$('#re').val(),
+                    'csrfmiddlewaretoken': '{{ csrf_token }}',
+                },
+                success: function(data) {
+                    location.reload();
+                },
+                error: function(data) {
+                    alert(data.responseText);
+                }
+            });
+        } else if (x == 'edit') {
+            $.ajax({
+                type: "post",
+                url: "case",
+                data: {
+                    opt: "edit",
+                    seqid: $('#seqid').val(),
+                    name: "{{ id }}",
+                    params: $('#paramsedit').val(),
+                    body: $('#bodyedit').val(),
+                    restype: $('#restypeedit').val(),
+                    response: $('#responseedit').val(),
+                    pname:$('#nameedit').val(),
+                    re:$('#reedit').val(),
+                    'csrfmiddlewaretoken': '{{ csrf_token }}',
+                },
+                success: function(data) {
+                    location.reload();
+                },
+                error: function(data) {
+                    alert(data.responseText);
+                }
+            });
+        }
+    }
+
+    function edit(seqid) {
+        $.ajax({
+            type: "post",
+            url: "case",
+            data: {
+                opt: "info",
+                name: "{{ id }}",
+                seqid: seqid,
+                'csrfmiddlewaretoken': '{{ csrf_token }}',
+            },
+            success: function(data) {
+                $('#seqid').val(seqid);
+                $('#paramsedit').val(data.params);
+                $('#bodyedit').val(data.body);
+                $('#responseedit').val(data.response);
+                $('#nameedit').val(data.name);
+                $('#reedit').val(data.re);
+                if (data.restype == 'content') {
+                    $("#restypeedit").val("content");
+                }
+                if (data.restype == 'status') {
+                    $("#restypeedit").val("status");
+                }
+                if (data.restype == 'none') {
+                    $("#restypeedit").val("none");
+                }
+                $('#edit').modal('show');
+            },
+            error: function(data) {
+                alert("error");
+            }
+        });
+    }
+
+    function del(obj, index) {
+        $('#table').bootstrapTable('getData').splice(index, 1);
+        var td = $(obj);
+        $('#table').bootstrapTable('load', $('#table').bootstrapTable('getData'));
+        td.parents("tr").remove();
+    }
+
+    function psubmit(x) {
+        if (x == 'add') {
+            $.ajax({
+                type: "post",
+                url: "param",
+                data: {
+                    opt: "add",
+                    name: "{{ id }}",
+                    pname: $('#pname').val(),
+                    purl: $('#purl').val(),
+                    ptype: $('#ptype').val(),
+                    pheader: $('#pheader').val(),
+                    pparams: $('#pparam').val(),
+                    pbody: $('#pbody').val(),
+                    pre: $('#pre').val(),
+                    'csrfmiddlewaretoken': '{{ csrf_token }}',
+                },
+                success: function(data) {
+                    location.reload();
+                },
+                error: function(data) {
+                    alert(data.responseText);
+                }
+            });
+        } else if (x == 'edit') {
+            $.ajax({
+                type: "post",
+                url: "param",
+                data: {
+                    opt: "edit",
+                    seqid: $('#pseqid').val(),
+                    id: "{{ id }}",
+                    pname: $('#pnameedit').val(),
+                    purl: $('#purledit').val(),
+                    ptype: $('#ptypeedit').val(),
+                    pheader: $('#pheaderedit').val(),
+                    pparams: $('#pparamsedit').val(),
+                    pbody: $('#pbodyedit').val(),
+                    pre: $('#preedit').val(),
+                    'csrfmiddlewaretoken': '{{ csrf_token }}',
+                },
+                success: function(data) {
+                    location.reload();
+                },
+                error: function(data) {
+                    alert(data.responseText);
+                }
+            });
+        }else if(x=='import'){
+            $.ajax({
+                type:'post',
+                url:'param',
+                data:{
+                    opt:"import",
+                    name:"{{ id }}",
+                    imname:$("#imname").val(),
+                     'csrfmiddlewaretoken': '{{ csrf_token }}',
+                },
+                success:function (data) {
+                    location.reload();
+                },
+                error: function(data) {
+                    alert(data.responseText);
+                }
+            })
+        }
+    }
+
+    function pedit(seqid) {
+        $.ajax({
+            type: "post",
+            url: "param",
+            data: {
+                opt: "info",
+                name: "{{ id }}",
+                seqid: seqid,
+                'csrfmiddlewaretoken': '{{ csrf_token }}',
+            },
+            success: function(data) {
+                $('#pseqid').val(seqid);
+                $('#pnameedit').val(data.pname);
+                $('#purledit').val(data.purl);
+                $('#pparamsedit').val(data.pparams);
+                $('#pbodyedit').val(data.pbody);
+                $('#preedit').val(data.pre);
+                $('#ptypeedit').val(data.ptype);
+                $('#pheaderedit').val(data.pheader);
+                $('#paramedit').modal('show');
+            },
+            error: function(data) {
+                alert("error");
+            }
+        });
+    }
+
+    function pdel(obj, index) {
+        $('#table_pre').bootstrapTable('getData').splice(index, 1);
+        var td = $(obj);
+        $('#table_pre').bootstrapTable('load', $('#table_pre').bootstrapTable('getData'));
+        td.parents("tr").remove();
+    }
+
+    function pcsubmit(x) {
+        if (x == 'add') {
+            $.ajax({
+                type: "post",
+                url: "postcon",
+                data: {
+                    opt: "add",
+                    name: "{{ id }}",
+                    pcname: $('#pcname').val(),
+                    pcurl: $('#pcurl').val(),
+                    pctype: $('#pctype').val(),
+                    pcheader: $('#pcheader').val(),
+                    pcparams: $('#pcparam').val(),
+                    pcbody: $('#pcbody').val(),
+                    time: $('#time').val(),
+                    'csrfmiddlewaretoken': '{{ csrf_token }}',
+                },
+                success: function(data) {
+                    location.reload();
+                },
+                error: function(data) {
+                    alert(data.responseText);
+                }
+            });
+        } else if (x == 'edit') {
+            $.ajax({
+                type: "post",
+                url: "postcon",
+                data: {
+                    opt: "edit",
+                    pcseqid: $('#pcseqid').val(),
+                    name: "{{ id }}",
+                    pcname: $('#pcnameedit').val(),
+                    pcurl: $('#pcurledit').val(),
+                    pctype: $('#pctypeedit').val(),
+                    pcheader: $('#pcheaderedit').val(),
+                    pcparams: $('#pcparamsedit').val(),
+                    pcbody: $('#pcbodyedit').val(),
+                    time: $('#timeedit').val(),
+                    'csrfmiddlewaretoken': '{{ csrf_token }}',
+                },
+                success: function(data) {
+                    location.reload();
+                },
+                error: function(data) {
+                    alert(data.responseText);
+                }
+            });
+        }else if(x=='import') {
+            $.ajax({
+                type: 'post',
+                url: 'postcon',
+                data: {
+                    opt: "import",
+                    name: "{{ id }}",
+                    imname: $("#impcname").val(),
+                    'csrfmiddlewaretoken': '{{ csrf_token }}',
+                },
+                success: function (data) {
+                    location.reload();
+                },
+                error: function (data) {
+                    alert(data.responseText);
+                }
+            });
+        }
+    }
+
+    function pcedit(seqid) {
+        $.ajax({
+            type: "post",
+            url: "postcon",
+            data: {
+                opt: "info",
+                name: "{{ id }}",
+                seqid: seqid,
+                'csrfmiddlewaretoken': '{{ csrf_token }}',
+            },
+            success: function(data) {
+                $('#pcseqid').val(seqid);
+                $('#pcnameedit').val(data.pcname);
+                $('#pcurledit').val(data.pcurl);
+                $('#pcparamsedit').val(data.pcparams);
+                $('#pcbodyedit').val(data.pcbody);
+                $('#pctypeedit').val(data.pctype);
+                $('#pcheaderedit').val(data.pcheader);
+                $('#timeedit').val(data.time);
+                $('#postconedit').modal('show');
+            },
+            error: function(data) {
+                alert("error");
+            }
+        });
+    }
+
+    function pcdel(obj, index) {
+        $('#table_pc').bootstrapTable('getData').splice(index, 1);
+        var td = $(obj);
+        $('#table_pc').bootstrapTable('load', $('#table_pc').bootstrapTable('getData'));
+        td.parents("tr").remove();
+    }
+
+    function order() {
+        var allTableData = $('#table').bootstrapTable('getData');
+        $.ajax({
+            type: "post",
+            url: "case",
+            data: {
+                opt: "order",
+                name: "{{ id }}",
+                allTableData: allTableData,
+                number: allTableData.length,
+                'csrfmiddlewaretoken': '{{ csrf_token }}',
+            },
+            success: function(data) {
+                alert('更新成功');
+                location.reload();
+            },
+            error: function(data) {
+                alert("error");
+            }
+        });
+    }
+
+    function porder() {
+        var allTableData = $('#table_pre').bootstrapTable('getData');
+        $.ajax({
+            type: "post",
+            url: "param",
+            data: {
+                opt: "order",
+                name: "{{ id }}",
+                allTableData: allTableData,
+                number: allTableData.length,
+                'csrfmiddlewaretoken': '{{ csrf_token }}',
+            },
+            success: function(data) {
+                alert('更新成功');
+                location.reload();
+            },
+            error: function(data) {
+                alert("error");
+            }
+        });
+    }
+
+    function pcorder() {
+        var allTableData = $('#table_pc').bootstrapTable('getData');
+        $.ajax({
+            type: "post",
+            url: "postcon",
+            data: {
+                opt: "order",
+                name: "{{ id }}",
+                allTableData: allTableData,
+                number: allTableData.length,
+                'csrfmiddlewaretoken': '{{ csrf_token }}',
+            },
+            success: function(data) {
+                alert('更新成功');
+                location.reload();
+            },
+            error: function(data) {
+                alert("error");
+            }
+        });
+    }
+
+    function cruncase(seqid) {
+        $('#caseresult').modal('show');
+        $('.result_info,.error_info').css('display', 'none');
+        $('.running').css('display', 'block');
+        $.ajax({
+            type: "get",
+            url: "runcase",
+            data: {
+                type: "case",
+                seqid: seqid,
+                name: "{{ id }}",
+                project:"{{ proname }}",
+                t: new Date().valueOf()
+            },
+            success: function(data) {
+                $('.loadEffect').css('display', 'none');
+                $('.running').css('display', 'none');
+                $('.result_info').css('display', 'block');
+                $('#table_caseresult').bootstrapTable('load', data);
+                $('#caseresult').modal('handleUpdate');
+            },
+            error: function(data) {
+                $('.loadEffect').css('display', 'none');
+                $('.running').css('display', 'none');
+                $('.error_info').css('display', 'block');
+                $('#error_case').text(data.responseText);
+            }
+        });
+    }
+
+    function pruncase(seqid) {
+        $('#paramresult').modal('show');
+        $('.result_info,.error_info').css('display', 'none');
+        $('.running').css('display', 'block');
+        $.ajax({
+            type: "get",
+            url: "runcase",
+            data: {
+                type: "param",
+                seqid: seqid,
+                name: "{{ id }}",
+                project:"{{ proname }}",
+                t: new Date().valueOf()
+            },
+            success: function(data) {
+                $('.loadEffect').css('display', 'none');
+                $('.running').css('display', 'none');
+                $('.result_info').css('display', 'block');
+                $('#table_paramresult').bootstrapTable('load', data);
+                $('#paramresult').modal('handleUpdate');
+            },
+            error: function(data) {
+                alert(data)
+            }
+        });
+    }
+    function pcruncase(seqid) {
+        $('#pcresult').modal('show');
+        $('.result_info,.error_info').css('display', 'none');
+        $('.running').css('display', 'block');
+        $.ajax({
+            type: "get",
+            url: "runcase",
+            data: {
+                type: "postcon",
+                seqid: seqid,
+                name: "{{ id }}",
+                project:"{{ proname }}",
+                t: new Date().valueOf()
+            },
+            success: function(data) {
+                $('.loadEffect').css('display', 'none');
+                $('.running').css('display', 'none');
+                $('.result_info').css('display', 'block');
+                $('#table_pcresult').bootstrapTable('load', data);
+                $('#pcresult').modal('handleUpdate');
+            },
+            error: function(data) {
+                $('.loadEffect').css('display', 'none');
+                $('.running').css('display', 'none');
+                $('.error_info').css('display', 'block');
+                $('#error_pc').text(data.responseText);
+            }
+        });
+    }
+    </script>
+</head>
+
+<body>
+    {% csrf_token %}
+    <nav class="navbar navbar-default navbar-inverse" role="navigation">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a href="../" class="navbar-brand">双师测试平台</a>
+        </div>
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <!--嵌套下拉菜单-->
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="./">接口自动化</a></li>
+                <li class="dropdown">
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="row">
+        <div class="span6">
+            <ul class="breadcrumb">
+                <li>
+                    <a href="./?pro_name={{ proname }}&page_num={{ pagenum }}">接口自动化</a> <span class="divider">></span>
+                </li>
+                <li class="active"><span id="case"></span>-用例</li>
+            </ul>
+        </div>
+        <!-- <button class="btn btn-large" type="button" onclick="window.location.href='./'">返回</button> -->
+    </div>
+    <table width="95%" align="center">
+            <tr>
+                <th>
+                    <div class="text-info">
+                        <h5>api系统共有参数</h5></div>
+                </th>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <table id="table_common" data-use-row-attr-func="true" data-reorderable-rows="true" style="word-break:break-all; word-wrap:break-all;"></table>
+                </td>
+            </tr>
+    </table>
+    <table width="95%" align="center">
+            <tr>
+                <th>
+                    <div class="text-info">
+                        <h5>项目共有参数</h5></div>
+                </th>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <table id="table_procomm" data-use-row-attr-func="true" data-reorderable-rows="true" style="word-break:break-all; word-wrap:break-all;"></table>
+                </td>
+            </tr>
+    </table>
+    <table width="100%">
+        <tr>
+            <th>
+                <div class="text-info">
+                    <h3>参数化设置</h3></div>
+            </th>
+            <th>
+                <div style="float: right;">
+                    <button class="btn btn-large btn-primary" type="button" data-toggle="modal" data-target="#paramimport" title="导入"><span class="glyphicon glyphicon-import"></span></button>
+                    <button class="btn btn-large btn-primary" type="button" data-toggle="modal" data-target="#paramadd" title="增加"><span class="glyphicon glyphicon-plus"></span></button>
+                    <button class="btn btn-large btn-primary" type="button" data-toggle="modal" data-target="#paramorder" title="确认"><span class="glyphicon glyphicon-ok"></span></button>
+                </div>
+            </th>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <table id="table_pre" data-use-row-attr-func="true" data-reorderable-rows="true" style="word-break:break-all; word-wrap:break-all;"></table>
+            </td>
+        </tr>
+    </table>
+    <hr/>
+    <table width="100%">
+        <tr>
+            <th>
+                <div class="text-info">
+                    <h3>测试用例</h3></div>
+            </th>
+            <th>
+                <div style="float: right;">
+                    <button class="btn btn-large btn-primary" type="button" data-toggle="modal" data-target="#add" title="增加"><span class="glyphicon glyphicon-plus"></span></button>
+                    <button class="btn btn-large btn-primary" type="button" data-toggle="modal" data-target="#caseorder" title="确认"><span class="glyphicon glyphicon-ok"></span></button>
+                </div>
+            </th>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <table id="table" data-use-row-attr-func="true" data-reorderable-rows="true" style="word-break:break-all; word-wrap:break-all;"></table>
+            </td>
+        </tr>
+    </table>
+    <table width="100%">
+        <tr>
+            <th>
+                <div class="text-info">
+                    <h3>后置条件</h3></div>
+            </th>
+            <th>
+                <div style="float: right;">
+                    <button class="btn btn-large btn-primary" type="button" data-toggle="modal" data-target="#postconimport" title="导入"><span class="glyphicon glyphicon-import"></span></button>
+                    <button class="btn btn-large btn-primary" type="button" data-toggle="modal" data-target="#postcon" title="增加"><span class="glyphicon glyphicon-plus"></span></button>
+                    <button class="btn btn-large btn-primary" type="button" data-toggle="modal" data-target="#postconorder" title="确认"><span class="glyphicon glyphicon-ok"></span></button>
+                </div>
+            </th>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <table id="table_pc" data-use-row-attr-func="true" data-reorderable-rows="true" style="word-break:break-all; word-wrap:break-all;"></table>
+            </td>
+        </tr>
+    </table>
+    <!-- Modal -->
+    <div class="modal fade" id="add" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">添加用例</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal" method="post">
+                        {% csrf_token %}
+                        <label class="control-label" for="input01">参数</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%;" name="params" id="params">
+                        </div>
+                        <!-- Text input-->
+                        <label class="control-label" for="input01">请求内容</label>
+                        <div class="controls">
+                            <textarea placeholder="" class="form-control" type="textarea" rows="2" style="width: 100%;" name="body" id="body"></textarea>
+                        </div>
+                        <label class="control-label">校验类型</label>
+                        <select class="form-control" style="width: 100%" name="restype" id="restype">
+                            <option value="content" selected="true">返回内容</option>
+                            <option value="status">返回码</option>
+                            <option value="none">无返回</option>
+                        </select>
+                        <!-- Text input-->
+                        <label class="control-label" for="input01">校验内容</label>
+                        <div class="controls">
+                            <textarea placeholder="" class="form-control" type="textarea" rows="1" style="width: 100%" name="response" id="response"></textarea>
+                        </div>
+                        <label class="control-label" for="pname">参数名</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%;" name="name" id="name">
+                        </div>
+	                    <label class="control-label" for="pre">参数获取</label>
+                        <div class="controls">
+                            <textarea placeholder="" class="form-control" type="textarea" rows="2" style="width: 100%;" name="re" id="re"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" onclick="casesubmit('add')">新增</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="edit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">编辑用例</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal" method="post">
+                        {% csrf_token %}
+                        <input placeholder="" class="form-control" type="hidden" style="width: 100%;" name="seqid" id="seqid">
+                        <label class="control-label" for="input01">参数</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%;" name="paramsedit" id="paramsedit">
+                        </div>
+                        <label class="control-label" for="input01">请求内容</label>
+                        <div class="controls">
+                            <textarea placeholder="" class="form-control" type="textarea" rows="2" style="width: 100%;" name="bodyedit" id="bodyedit"></textarea>
+                        </div>
+                        <label class="control-label">校验类型</label>
+                        <select class="form-control" style="width: 100%" name="restypeedit" id="restypeedit">
+                            <option value="content" selected="true">返回内容</option>
+                            <option value="status">返回码</option>
+                            <option value="none">无返回</option>
+                        </select>
+                        <!-- Text input-->
+                        <label class="control-label" for="input01">校验内容</label>
+                        <div class="controls">
+                            <textarea placeholder="" class="form-control" type="textarea" rows="1" style="width: 100%" name="responseedit" id="responseedit"></textarea>
+                        </div>
+                        <label class="control-label" for="pname">参数名</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%;" name="nameedit" id="nameedit">
+                        </div>
+	                    <label class="control-label" for="pre">参数获取</label>
+                        <div class="controls">
+                            <textarea placeholder="" class="form-control" type="textarea" rows="2" style="width: 100%;" name="reedit" id="reedit"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" onclick="casesubmit('edit')">修改</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 信息删除确认 -->
+    <div class="modal fade" id="casedel" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog">
+            <div class="modal-content message_align">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                    <h4 class="modal-title">提示信息</h4>
+                </div>
+                <div class="modal-body">
+                    <p>您确认要删除吗？</p>
+                </div>
+                <div class="modal-footer">
+                    <input type="hidden" id="url" />
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <a onclick="urlSubmit()" class="btn btn-success" data-dismiss="modal">确定</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 信息删除确认 -->
+    <div class="modal fade" id="caseorder" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog">
+            <div class="modal-content message_align">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                    <h4 class="modal-title">提示信息</h4>
+                </div>
+                <div class="modal-body">
+                    <p>是否确认保存用例和排序？</p>
+                </div>
+                <div class="modal-footer">
+                    <input type="hidden" id="url" />
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <a onclick="order()" class="btn btn-success" data-dismiss="modal">确定</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--Modal import-->
+    <div class="modal fade" id="paramimport" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">导入参数化</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal" method="post">
+                        {% csrf_token %}
+                        <label class="control-label" for="input01">被导入接口名</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%;" name="imname" id="imname">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" id="pimport" onclick="psubmit('import')">导入</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="paramadd" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">添加参数化</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal" method="post">
+                        {% csrf_token %}
+                        <label class="control-label" for="pname">参数名</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%;" name="pname" id="pname">
+                        </div>
+                        <label class="control-label" for="purl">请求路径</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%;" name="purl" id="purl">
+                        </div>
+                        <label class="control-label">请求类型</label>
+                        <select class="form-control" style="width: 100%" name="ptype" id="ptype">
+                            <option value="GET" selected="true">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="WS">WS</option>
+                        </select>
+                        <label class="control-label" for="pheader">请求头</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%;" name="pheader" id="pheader">
+                        </div>
+                        <label class="control-label" for="pparam">请求参数</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%" name="pparam" id="pparam">
+                        </div>
+                        <label class="control-label" for="pbody">请求内容</label>
+                        <div class="controls">
+                            <textarea placeholder="" class="form-control" type="textarea" rows="2" style="width: 100%;" name="pbody" id="pbody"></textarea>
+                        </div>
+                        <!-- Text input-->
+                        <label class="control-label" for="pre">参数获取</label>
+                        <div class="controls">
+                            <textarea placeholder="" class="form-control" type="textarea" rows="2" style="width: 100%;" name="pre" id="pre"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" onclick="psubmit('add')">新增</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="paramedit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">修改参数化</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal" method="post">
+                        {% csrf_token %}
+                        <input placeholder="" class="form-control" type="hidden" style="width: 100%;" name="pseqid" id="pseqid">
+                        <label class="control-label" for="pnameedit">参数名</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%;" name="pnameedit" id="pnameedit">
+                        </div>
+                        <label class="control-label" for="purledit">请求路径</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%;" name="purledit" id="purledit">
+                        </div>
+                        <label class="control-label">请求类型</label>
+                        <select class="form-control" style="width: 100%" name="ptypeedit" id="ptypeedit">
+                            <option value="GET" selected="true">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="WS">WS</option>
+                        </select>
+                        <label class="control-label" for="pheaderedit">请求头</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%;" name="pheaderedit" id="pheaderedit">
+                        </div>
+                        <label class="control-label" for="pparamsedit">请求参数</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%" name="pparamsedit" id="pparamsedit">
+                        </div>
+                        <label class="control-label" for="pbodyedit">请求内容</label>
+                        <div class="controls">
+                            <textarea placeholder="" class="form-control" type="textarea" rows="2" style="width: 100%;" name="pbodyedit" id="pbodyedit"></textarea>
+                        </div>
+                        <!-- Text input-->
+                        <label class="control-label" for="preedit">参数获取</label>
+                        <div class="controls">
+                            <textarea placeholder="" class="form-control" type="textarea" rows="2" style="width: 100%;" name="preedit" id="preedit" ></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" onclick="psubmit('edit')">修改</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 信息删除确认 -->
+    <div class="modal fade" id="paramorder" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog">
+            <div class="modal-content message_align">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                    <h4 class="modal-title">提示信息</h4>
+                </div>
+                <div class="modal-body">
+                    <p>是否确认保存参数化和排序？</p>
+                </div>
+                <div class="modal-footer">
+                    <input type="hidden" id="url" />
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <a onclick="porder()" class="btn btn-success" data-dismiss="modal">确定</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--begin postcondition modal-->
+    <!-- Modal -->
+    <div class="modal fade" id="postcon" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">添加后置条件</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal" method="post">
+                        {% csrf_token %}
+                        <label class="control-label" for="pcname">接口名称</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%;" name="pcname" id="pcname">
+                        </div>
+                        <label class="control-label" for="pcurl">请求路径</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%;" name="pcurl" id="pcurl">
+                        </div>
+                        <label class="control-label">请求类型</label>
+                        <select class="form-control" style="width: 100%" name="pctype" id="pctype">
+                            <option value="GET" selected="true">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="WS">WS</option>
+                        </select>
+                        <label class="control-label" for="pcheader">请求头</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%;" name="pcheader" id="pcheader">
+                        </div>
+                        <label class="control-label" for="pcparam">请求参数</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%" name="pcparam" id="pcparam">
+                        </div>
+                        <label class="control-label" for="pcbody">请求内容</label>
+                        <div class="controls">
+                            <textarea placeholder="" class="form-control" type="textarea" rows="2" style="width: 100%;" name="pcbody" id="pcbody"></textarea>
+                        </div>
+                        <label class="control-label" for="time">执行次数</label>
+                        <select class="form-control" style="width: 100%" name="time" id="time">
+                            <option value="n">n</option>
+                            <option value="1" selected="true">1</option>
+                        </select>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" onclick="pcsubmit('add')">增加</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="postconedit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">修改后置条件</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal" method="post">
+                        {% csrf_token %}
+                        <input placeholder="" class="form-control" type="hidden" style="width: 100%;" name="pcseqid" id="pcseqid">
+                        <label class="control-label" for="pcnameedit">接口名称</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%;" name="pcnameedit" id="pcnameedit">
+                        </div>
+                        <label class="control-label" for="pcurledit">请求路径</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%;" name="pcurledit" id="pcurledit">
+                        </div>
+                        <label class="control-label">请求类型</label>
+                        <select class="form-control" style="width: 100%" name="pctypeedit" id="pctypeedit">
+                            <option value="GET" selected="true">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="WS">WS</option>
+                        </select>
+                        <label class="control-label" for="pcheaderedit">请求头</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%;" name="pcheaderedit" id="pcheaderedit">
+                        </div>
+                        <label class="control-label" for="pcparamsedit">请求参数</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%" name="pcparamsedit" id="pcparamsedit">
+                        </div>
+                        <label class="control-label" for="pcbodyedit">请求内容</label>
+                        <div class="controls">
+                            <textarea placeholder="" class="form-control" type="textarea" rows="2" style="width: 100%;" name="pcbodyedit" id="pcbodyedit"></textarea>
+                        </div>
+                        <label class="control-label" for="timeedit">执行次数</label>
+                        <select class="form-control" style="width: 100%" name="timeedit" id="timeedit">
+                            <option value="n">n</option>
+                            <option value="1" selected="true">1</option>
+                        </select>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" onclick="pcsubmit('edit')">修改</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--end down modal-->
+    <!-- 信息删除确认 -->
+    <div class="modal fade" id="postconorder">
+        <div class="modal-dialog">
+            <div class="modal-content message_align">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                    <h4 class="modal-title">提示信息</h4>
+                </div>
+                <div class="modal-body">
+                    <p>是否确认保存参数化和排序？</p>
+                </div>
+                <div class="modal-footer">
+                    <input type="hidden" id="url" />
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                    <a onclick="pcorder()" class="btn btn-success" data-dismiss="modal">确定</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--Modal import-->
+    <div class="modal fade" id="postconimport" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel">导入后置条件</h4>
+                </div>
+                <div class="modal-body">
+                    <form class="form-horizontal" method="post">
+                        {% csrf_token %}
+                        <label class="control-label" for="input01">被导入接口名</label>
+                        <div class="controls">
+                            <input placeholder="" class="form-control" type="text" style="width: 100%;" name="impcname" id="impcname">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" id="import" onclick="pcsubmit('import')">导入</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 用例结果 -->
+    <div class="modal fade" id="caseresult" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content message_align">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                    <h4 class="modal-title">调试结果</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="result_info">
+                        <p>结果如下：</p>
+                        <div>
+                            <table id="table_caseresult" style="word-break:break-all; word-wrap:break-all;"></table>
+                        </div>
+                    </div>
+                    <div class="error_info">
+                        <p>错误信息如下：</p>
+                            <p id="error_case" class="text-danger"></p>
+                    </div>
+                    <p class="text-info running" style="font-size: 15px;">正在处理，请稍候。。。</p>
+                    <div class="loadEffect" id="loadEffect" style="display: block;">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 参数化结果 -->
+    <div class="modal fade" id="paramresult" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog">
+            <div class="modal-content message_align">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                    <h4 class="modal-title">参数化结果</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="result_info">
+                        <p>结果如下：</p>
+                        <div>
+                            <table id="table_paramresult" style="word-break:break-all; word-wrap:break-all;"></table>
+                        </div>
+                    </div>
+                    <p class="text-info running" style="font-size: 15px;">正在处理，请稍候。。。</p>
+                    <div class="loadEffect" id="loadEffect" style="display: block;">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 后置条件结果 -->
+    <div class="modal fade" id="pcresult">
+        <div class="modal-dialog">
+            <div class="modal-content message_align">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                    <h4 class="modal-title">后置条件调试结果</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="result_info">
+                        <p>结果如下：</p>
+                        <div>
+                            <table id="table_pcresult" style="word-break:break-all; word-wrap:break-all;"></table>
+                        </div>
+                    </div>
+                    <div class="error_info">
+                        <p>错误信息如下：</p>
+                            <p id="error_pc" class="text-danger"></p>
+                    </div>
+                    <p class="text-info running" style="font-size: 15px;">正在处理，请稍候。。。</p>
+                    <div class="loadEffect" id="loadEffect" style="display: block;">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

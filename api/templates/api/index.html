@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <title>双师测试平台</title>
+    <link href="../static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../static/css/bootstrap-table.css" rel="stylesheet">
+    <link href="../static/css/jquery.mloading.css" rel="stylesheet">
+    <script src="../static/js/jquery-3.2.1.min.js"></script>
+    <script src="../static/js/bootstrap.min.js"></script>
+    <script src="../static/js/bootstrap-table.js"></script>
+    <script src="../static/js/bootstrap-table-zh-CN.js"></script>
+    <script src="../static/js/jquery.mloading.js"></script>
+    <script src="../static/navigation.js"></script>
+    <style type="text/css">
+        #all {
+            width: 100%;
+            height: 100%;
+            margin-top: 5%;
+        }
+
+        #left {
+            position: absolute;
+            float: left;
+            width: 20%;
+            height: 100%;
+            padding-right: 10px;
+        }
+
+        #right {
+            position: absolute;
+            float: right;
+            width: 80%;
+            height: 100%;
+            margin-left: 20%;
+        }
+
+        .loadEffect {
+            width: 80px;
+            height: 40px;
+            margin: 0 auto;
+            margin-top: 30px;
+        }
+
+        .loadEffect span {
+            display: inline-block;
+            width: 8px;
+            height: 100%;
+            border-radius: 4px;
+            background: lightgreen;
+            -webkit-animation: load 1s ease infinite;
+        }
+
+        @-webkit-keyframes load {
+            0%,
+            100% {
+                height: 40px;
+                background: lightgreen;
+            }
+            50% {
+                height: 70px;
+                margin: -15px 0;
+                background: lightblue;
+            }
+        }
+
+        .loadEffect span:nth-child(2) {
+            -webkit-animation-delay: 0.2s;
+        }
+
+        .loadEffect span:nth-child(3) {
+            -webkit-animation-delay: 0.4s;
+        }
+
+        .loadEffect span:nth-child(4) {
+            -webkit-animation-delay: 0.6s;
+        }
+
+        .loadEffect span:nth-child(5) {
+            -webkit-animation-delay: 0.8s;
+        }
+
+        .btn-circle {
+            width: 100px;
+            height: 40px;
+            text-align: center;
+            padding: 6px 0;
+            font-size: 16px;
+            border-radius: 15px;
+        }
+
+        td{ word-break: break-all; }
+    </style>
+    <script type="text/javascript">
+        var str = "";
+        var cstr="";
+        var pro_name = "{{ name }}";
+        $(function () {
+            $.ajax({
+                url: "project",
+                type: "POST",
+                data: {
+                    opt: "info",
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function (data) {
+                    for (var i in data) {
+                        if(pro_name===data[i]) {
+                            str = str + "<option value=" + i + " selected = \"selected\">" + data[i] + "</option>";
+                        }else{
+                            str = str + "<option value=" + i + ">" + data[i] + "</option>";
+                        }
+                    }
+                    str="<option selected=\"selected\" disabled=\"disabled\"  style='display: none' value=''></option>"+str;
+                    $("#project-info").append(str);
+                    for (var i in data) {
+                        cstr = cstr + "<option value=" + i + ">" + data[i] + "</option>";
+                    }
+                    cstr="<option selected=\"selected\" disabled=\"disabled\"  style='display: none' value=''></option>"+cstr;
+
+                },
+                error: function () {
+                    alert("获取数据失败");
+                }
+            });
+
+            $("#project-info").change(function () {
+                pro_name = $(this).find("option:selected").text();
+                $('#table').bootstrapTable('refresh');
+                $('#table_procomm').bootstrapTable('refresh');
+            });
+            $('#table').bootstrapTable({
+                url: 'getlist',
+                dataType: "json",
+                method: 'get',
+                sortOrder: "asc",
+                striped: true,
+                cache: false,
+                detailView: true, //父子表
+                sidePagination: "client",
+                pageSize: 10,
+                pageNumber:{{ pageNum }},
+                pagination: true,
+                queryParams: function (params) {
+                    return {
+                        projectname: pro_name,
+                    }
+                },
+                columns: [{
+                    checkbox: true
+                },{
+                    field: 'name',
+                    title: '名称'
+                }, {
+                    field: 'url',
+                    title: 'URL地址'
+                }, {
+                    field: 'type',
+                    title: '请求类型'
+                }, {
+                    field: 'header',
+                    title: '请求头',
+                    width: '300',
+                }, {
+                    field: 'option',
+                    title: '操作',
+                    formatter: function (value, row, index) {
+                         return [
+                            '<button type="button" class="btn btn-primary btn-xs" onclick="edit(\'' + row.id + '\')">编辑</button>',
+                            '<button type="button" class="btn btn-primary btn-xs" onclick="del(\'' + row.id + '\')" style="margin-left: 10px;">删除</button>',
+                            '<button type="button" class="btn btn-primary btn-xs" onclick="caselist(\'' + row.id + '\')" style="margin-left: 10px;">用例</button>',
+                        ].join('');
+                    }
+                }],
+                onExpandRow: function (index, row, $detail) {
+                    var cur_table = $detail.html('<table></table>').find('table');
+                    $(cur_table).bootstrapTable({
+                        url: './caselist',
+                        dataType: "json",
+                        method: 'get',
+                        queryParams: {id: row.id},
+                        sortOrder: "asc",
+                        striped: true,
+                        cache: false,
+                        sidePagination: "client",
+                        pageSize: 10,
+                        pagination: true,
+                        columns: [{
+                            field: 'seqid',
+                            title: '序号',
+                            width: '50'
+                        }, {
+                            field: 'params',
+                            title: '参数'
+                        }, {
+                            field: 'body',
+                            title: '请求内容'
+                        }, {
+                            field: 'restype',
+                            title: '校验类型'
+                        }, {
+                            field: 'response',
+                            title: '校验内容'
+                        }]
+                    });
+                }
+            });
+
+            $('#table_result').bootstrapTable({
+                sortOrder: "asc",
+                striped: true,
+                cache: false,
+                sidePagination: "client",
+                pageSize: 10,
+                pagination: true,
+                columns: [{
+                    field: 'name',
+                    title: '名称'
+                }, {
+                    field: 'seqid',
+                    title: '序号'
+                }, {
+                    field: 'result',
+                    title: '结果'
+                }],
+            });
+            $('#table_project').bootstrapTable({
+                url: 'project',
+                dataType: "json",
+                method: 'get',
+                sortOrder: "asc",
+                striped: true,
+                cache: false,
+                sidePagination: "client",
+                pageSize: 10,
+                pageNumber:1,
+                pagination: true,
+                columns: [{
+                    checkbox: true
+                },{
+                    field: 'name',
+                    title: '名称',
+                    width:100
+                },{
+                    field: 'num',
+                    title: '用例数',
+                    width:50
+                },{
+                    field: 'price',
+                    title: '操作',
+                    width: '180',
+                    formatter: function(value, row, index) {
+                        return [
+                            '<button type="button" class="btn btn-primary btn-xs" onclick="projectedit(\'' + row.id + '\')">编辑</button> &nbsp;',
+                            '<button type="button" class="btn btn-primary btn-xs" onclick="projectenter(\'' + row.id + '\')">进入</button> &nbsp;',
+                            '<button type="button" class="btn btn-primary btn-xs" onclick="projectcopy(\'' + row.id + '\')">复制</button> &nbsp;',
+                            '<button type="button" class="btn btn-primary btn-xs" onclick="projectdel(\'' + row.id + '\')">删除</button> &nbsp;',
+                            {#'<button type="button" class="btn btn-primary btn-xs" onclick="projectexport(\'' + row.id + '\')">导出</button> &nbsp;'#}
+                        ].join('');
+                    }
+                    }],
+            });
+            $('#table_common').bootstrapTable({
+            data: {{ data_common | safe }},
+            sortOrder: "asc",
+            striped: true,
+            cache: false,
+            sidePagination: "client",
+            columns: [{
+                field: 'id',
+                title: '参数id值',
+                visible: false
+            },{
+                field: 'key',
+                title: '参数key值',
+            },{
+                field: 'value',
+                title: '参数value值',
+            }, {
+                field: 'price',
+                title: '操作',
+                width: '180',
+                formatter: function(value, row, index) {
+                    return [
+                        '<button type="button" class="btn btn-primary btn-xs" onclick="cedit(\'' + row.id + '\')">编辑</button> &nbsp;',
+                        '<button type="button" class="btn btn-primary btn-xs" onclick="pcdel(\'' + row.id + '\')">删除</button> &nbsp;',
+                    ].join('');
+                }
+                }],
+            });
+            $('#table_procomm').bootstrapTable({
+            url: 'common',
+            dataType: "json",
+            method: 'get',
+            sortOrder: "asc",
+            striped: true,
+            cache: false,
+            sidePagination: "client",
+            queryParams: function (params) {
+                return {
+                    projectname: pro_name,
+                }
+            },
+            columns: [{
+                field: 'id',
+                title: '参数id值',
+                visible: false
+            },{
+                field: 'key',
+                title: '参数key值',
+            }, {
+                field: 'value',
+                title: '参数value值',
+            }, {
+                field: 'price',
+                title: '操作',
+                width: '180',
+                formatter: function(value, row, index) {
+                    return [
+                        '<button type="button" class="btn btn-primary btn-xs" onclick="cedit(\'' + row.id + '\')">编辑</button> &nbsp;',
+                        '<button type="button" class="btn btn-primary btn-xs" onclick="cdel(\'' + row.id + '\')">删除</button> &nbsp;',
+                    ].join('');
+                }
+                }],
+            });
+            //获取第一个input的焦点
+            $("#add_project,#add,#common").on('shown.bs.modal',function () {
+                var modal = $(this);
+                var ele=modal.find('.modal-body :text').first();
+                ele.focus();
+            });
+
+            $("#btnAdd").click(function () {
+                $("#project option").remove();
+                $("#project").append(str);
+            });
+            $("#btnComm").click(function () {
+                $("#commproject option").remove();
+                $("#commproject").append(cstr);
+            });
+
+            $("#projectname").blur(function () {
+                $.ajax({
+                    url: "project",
+                    type: "POST",
+                    data: {
+                        name: $(this).val(),
+                        opt: "assert",
+                        'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    },
+                    success: function (data) {
+                        if (data !== "ok") {
+                            $("#error").text(data);
+                            $("#projectname").val("");
+                        }
+                    },
+                })
+
+            });
+        })
+
+        function edit(id) {
+            $("#projectedit option").remove();
+            $("#projectedit").append(str);
+            $.ajax({
+                type: "post",
+                url: "api",
+                data: {
+                    opt: "info",
+                    id: id,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}',
+                },
+                success: function (data) {
+                    $('#idedit').val(data.id)
+                    $('#nameedit').val(data.name);
+                    $('#urledit').val(data.url);
+                    $("#typeedit").val(data.type);
+                    $("#headeredit").val(data.header);
+                    $("#projectedit").val(data.project);
+                    $('#edit').modal('show');
+                },
+                error: function (data) {
+                    alert("error");
+                }
+            });
+        }
+
+        function del(id) {
+                $.ajax({
+                    type: "post",
+                    url: "api",
+                    data: {
+                        opt: "del",
+                        id: id,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    },
+                    success: function (data) {
+                        //location.reload();
+                        $('#table').bootstrapTable('refresh');
+                    },
+                    error: function (data) {
+                        alert("error");
+                    }
+                });
+        }
+
+        function caselist(id) {
+            var num=$(".pagination").children(".page-number.active").children("a").text();
+            {#$("#statisticalProjectListTable").bootstrapTable('getPage');#}
+            console.log(num);
+            var temp = document.createElement("form");
+            temp.action = "./caselist";
+            temp.method = "post";
+            temp.style.display = "none";
+            var opt = document.createElement("input");
+            opt.name = "id";
+            opt.value = id;
+            temp.appendChild(opt);
+            var optn = document.createElement("input");
+            optn.name = "pagenum";
+            optn.value = num;
+            temp.appendChild(optn);
+            var csrf = document.createElement("input");
+            csrf.name = "csrfmiddlewaretoken";
+            csrf.value = "{{ csrf_token }}";
+            temp.appendChild(csrf);
+            document.body.appendChild(temp);
+            temp.submit();
+        }
+
+        function formsubmit(x) {
+            if (x === 'add') {
+                $.ajax({
+                    type: "post",
+                    url: "api",
+                    data: {
+                        opt: "add",
+                        name: $('#name').val(),
+                        url: $('#url').val(),
+                        type: $('#type').val(),
+                        header: $('#header').val(),
+                        project: $('#project').val(),
+                        'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    },
+                    success: function (data) {
+                        //window.location.href = "./";
+                        $('#add').modal('hide');
+                        $('#table').bootstrapTable('refresh');
+                    },
+                    error: function (data) {
+                        alert(data.responseText);
+                    }
+                });
+            } else if (x === 'edit') {
+                $.ajax({
+                    type: "post",
+                    url: "api",
+                    data: {
+                        opt: "edit",
+                        id:$('#idedit').val(),
+                        name: $('#nameedit').val(),
+                        url: $('#urledit').val(),
+                        type: $('#typeedit').val(),
+                        header: $('#headeredit').val(),
+                        project: $('#projectedit').val(),
+                        'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    },
+                    success: function (data) {
+                        //window.location.href = "./";
+                        $('#edit').modal('hide');
+                        $('#table').bootstrapTable('refresh');
+                    },
+                    error: function (data) {
+                        alert(data.responseText);
+                    }
+                });
+            }
+        }
+
+        function projectsubmit(x) {
+            if (x === 'add') {
+                $.ajax({
+                    type: "post",
+                    url: "project",
+                    data: {
+                        opt: "add",
+                        name: $('#projectname').val(),
+                        'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    },
+                    success: function (data) {
+                        location.reload();
+                       {# $('#add_project').modal('hide');#}
+                       {#$('#table_project').bootstrapTable('refresh');#}
+                    },
+                    error: function (data) {
+                        alert(data.responseText);
+                    }
+                });
+            } else if (x === 'edit') {
+                $.ajax({
+                    type: "post",
+                    url: "project",
+                    data: {
+                        opt: "edit",
+                        id: $('#projecteditid').val(),
+                        name: $('#projecteditname').val(),
+                        'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    },
+                    success: function (data) {
+                        $('#edit_project').modal('hide');
+                        $('#table_project').bootstrapTable('refresh');
+                    },
+                    error: function (data) {
+                        alert(data.responseText);
+                    }
+                });
+            }else if (x === 'pwd') {
+                id=$('#id').val();
+                info=$("#info").text();
+                $.ajax({
+                    type: "post",
+                    url: "project",
+                    data: {
+                        opt: "pwd",
+                        password: $('#password').val(),
+                        'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    },
+                    success: function (data) {
+                        $('#permission').modal('hide');
+                        if (info==='复制'){
+                            projectcopy2(id)
+                        }else if (info==='删除'){
+                            $("#proid").val(id);
+                            $("#prodel").modal('show');
+                        }
+                    },
+                    error: function (data) {
+                        alert(data.responseText);
+                    }
+                });
+            }
+            else if (x === 'copy') {
+                $.ajax({
+                    type: "post",
+                    url: "project",
+                    data: {
+                        opt: "copy",
+                        id: $('#copiedid').val(),
+                        name: $('#copyname').val(),
+                        'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    },
+                    success: function (data) {
+                        if (data=='ok'){
+                            location.reload();
+                        }
+                    },
+                    error: function (data) {
+                        alert(data.responseText);
+                    }
+                });
+            }
+        }
+        function projectedit(id) {
+            $.ajax({
+                type: "post",
+                url: "project",
+                data: {
+                    opt: "query",
+                    id: id,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}',
+                },
+                success: function (data) {
+                    $('#projecteditid').val(data.id);
+                    $('#projecteditname').val(data.name);
+                    $('#edit_project').modal('show');
+                },
+                error: function (data) {
+                    alert(data.responseText);
+                }
+            });
+
+        }
+        function projectcopy(id) {
+            $("#id").val(id);
+            $("#info").text("复制");
+            $("#permission").modal('show')
+        }
+        function projectcopy2(id) {
+            $.ajax({
+                type: "post",
+                url: "project",
+                data: {
+                    opt: "query",
+                    id: id,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}',
+                },
+                success: function (data) {
+                    $('#copiedid').val(data.id);
+                    {#$('#copiedname').val(data.name);#}//这种方式赋值失败
+                    $('#copiedname').text(data.name);
+                    $('#copy_project').modal('show');
+                },
+                error: function (data) {
+                    alert(data.responseText);
+                }
+            });
+        }
+        function projectdel(id) {
+            $("#id").val(id);
+            $("#info").text("删除");
+            $("#permission").modal('show')
+        }
+        function projectdel2() {
+            $.ajax({
+                type: "post",
+                url: "project",
+                data: {
+                    opt: "del",
+                    id: $("#proid").val(),
+                    'csrfmiddlewaretoken': '{{ csrf_token }}',
+                },
+                success: function (data) {
+                    location.reload();
+                },
+                error: function (data) {
+                    alert(data.responseText);
+                }
+            });
+
+        }
+        function projectexport(id) {
+            $.ajax({
+                type: "post",
+                url: "project",
+                data: {
+                    opt: "export",
+                    id: id,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}',
+                },
+                success: function (data) {
+                    location.reload();
+                },
+                error: function (data) {
+                    alert(data.responseText);
+                }
+            });
+
+        }
+
+        function projectenter(id) {
+            {#location.reload();#}
+            $('#projects').modal('hide');
+
+            $("#project-info option[value='"+id+"']").attr("selected","selected");
+            pro_name = $("#project-info").find("option:selected").text();
+            $('#table').bootstrapTable('refresh');
+            $('#table_procomm').bootstrapTable('refresh');
+        }
+
+        function commonsubmit(x) {
+            if (x === 'add') {
+                $.ajax({
+                    type: "post",
+                    url: "common",
+                    data: {
+                        opt: "add",
+                        key: $('#key').val(),
+                        value: $('#value').val(),
+                        project: $('#commproject').val(),
+                        'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    },
+                    success: function (data) {
+                        window.location.href = "./?pro_name="+pro_name;
+                    },
+                    error: function (data) {
+                        alert(data.responseText);
+                    }
+                });
+            }
+            if (x === 'edit') {
+                $.ajax({
+                    type: "post",
+                    url: "common",
+                    data: {
+                        opt: "edit",
+                        id:$('#cidedit').val(),
+                        key: $('#keyedit').val(),
+                        value: $('#valueedit').val(),
+                        project: $('#cproedit').val(),
+                        'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    },
+                    success: function (data) {
+                        window.location.href = "./";
+                    },
+                    error: function (data) {
+                        alert(data.responseText);
+                    }
+                });
+            }
+        }
+        function cedit(id) {
+            $("#cproedit option").remove();
+            $("#cproedit").append(str);
+            $.ajax({
+                type: "post",
+                url: "common",
+                data: {
+                    opt: "info",
+                    id: id,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}',
+                },
+                success: function (data) {
+                    $('#cidedit').val(data.id);
+                    $('#keyedit').val(data.key);
+                    $('#valueedit').val(data.value);
+                    $("#cproedit").val(data.project);
+                    $('#commonedit').modal('show');
+                },
+                error: function (data) {
+                    alert(data.responseText);
+                }
+            });
+        }
+
+        function cdel(id) {
+                $.ajax({
+                    type: "post",
+                    url: "common",
+                    data: {
+                        opt: "del",
+                        id: id,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    },
+                    success: function (data) {
+                        //location.reload();
+                        $('#table_common').bootstrapTable('refresh');
+                        $('#table_procomm').bootstrapTable('refresh');
+                    },
+                    error: function (data) {
+                        alert(data.responseText);
+                    }
+                });
+        }
+        function pcdel(id) {
+                $.ajax({
+                    type: "post",
+                    url: "common",
+                    data: {
+                        opt: "del",
+                        id: id,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    },
+                    success: function (data) {
+                        location.reload();
+                    },
+                    error: function (data) {
+                        alert(data.responseText);
+                    }
+                });
+        }
+        function generate() {
+            var temp = document.createElement("form");
+            temp.action = "./generate";
+            temp.method = "post";
+            temp.style.display = "none";
+            var opt = document.createElement("input");
+            opt.name = "pro";
+            opt.value = str;
+            temp.appendChild(opt);
+            var csrf = document.createElement("input");
+            csrf.name = "csrfmiddlewaretoken";
+            csrf.value = "{{ csrf_token }}";
+            temp.appendChild(csrf);
+            document.body.appendChild(temp);
+            temp.submit();
+        }
+
+        function run() {
+            var cases = $('#table').bootstrapTable('getAllSelections')
+            if (cases == "") {
+                alert("请至少选择一个接口！");
+            } else {
+                $('#apiresult').modal('show');
+                $('#result_info').css('display', 'none');
+                $('.error').css('display', 'none');
+                $('#running').css('display', 'block');
+                $('#loadEffect').css('display', 'block');
+                $.ajax({
+                    type: "post",
+                    url: "runcase",
+                    data: {
+                        data: cases,
+                        project:pro_name,
+                        number: cases.length,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    },
+                    success: function (data) {
+                        $('#loadEffect').css('display', 'none');
+                        $('#running').css('display', 'none');
+                        $('#result_info').css('display', 'block');
+                        $('#table_result').bootstrapTable('load', data);
+                        $('#apiresult').modal('handleUpdate');
+                    },
+                    error: function (data) {
+                        $('#loadEffect').css('display', 'none');
+                        $('#running').css('display', 'none');
+                        $('.error').css('display', 'block');
+                        $('#errorinfo').html(data.responseText);
+                    }
+                });
+            }
+        }
+
+        function runall() {
+            var cases = $('#table').bootstrapTable('getAllSelections');
+            var data = JSON.stringify(cases);
+            if (cases == "") {
+                alert("请至少选择一个接口！");
+            } else {
+                $("body").mLoading();
+                var temp = document.createElement("form");
+                temp.action = "./runall";
+                temp.method = "post";
+                temp.style.display = "none";
+                var opt = document.createElement("input");
+                opt.name = "cases";
+                opt.value = data;
+                temp.appendChild(opt);
+                var opt = document.createElement("input");
+                opt.name = "project";
+                opt.value = pro_name;
+                temp.appendChild(opt);
+                var csrf = document.createElement("input");
+                csrf.name = "csrfmiddlewaretoken";
+                csrf.value = "{{ csrf_token }}";
+                temp.appendChild(csrf);
+                document.body.appendChild(temp);
+                temp.submit();
+            }
+        }
+
+    </script>
+</head>
+
+<body>
+<nav class="navbar navbar-default navbar-inverse" role="navigation" id="nav"></nav>
+
+    <table width="95%" align="center">
+            <tr>
+                <th>
+                    <div class="text-info">
+                        <h5>api系统共有参数</h5></div>
+                </th>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <table id="table_common" data-use-row-attr-func="true" data-reorderable-rows="true" style="word-break:break-all; word-wrap:break-all;"></table>
+                </td>
+            </tr>
+    </table>
+    <table width="95%" align="center">
+            <tr>
+                <th>
+                    <div class="text-info">
+                        <h5>项目共有参数</h5></div>
+                </th>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <table id="table_procomm" data-use-row-attr-func="true" data-reorderable-rows="true" style="word-break:break-all; word-wrap:break-all;"></table>
+                </td>
+            </tr>
+    </table>
+
+    <div style="float: left; padding-top: 15px">
+            <label style="float: left;line-height: 30px">选择项目：</label>
+            <select title="" style="width: auto;" class="form-control" name="project-info" id="project-info">
+            </select>
+    </div>
+    <div style="float: right;padding-top: 15px">
+        <button class="btn btn-large btn-primary" type="button" data-toggle="modal" data-target="#projects">项目
+        </button>
+        <button class="btn btn-large btn-primary" type="button" data-toggle="modal" id="btnComm" data-target="#common">添加共有参数
+        </button>
+        <button class="btn btn-large btn-primary" type="button" data-toggle="modal" id="btnAdd" data-target="#add">添加接口
+        </button>
+        <button class="btn btn-large btn-primary" type="button" onclick="run()">调试</button>
+        <button class="btn btn-large btn-primary" type="button" onclick="runall()">运行</button>
+    </div>
+</div>
+<div>
+    <table id="table"></table>
+</div>
+<!-- Modal -->
+<div class="modal fade" id="add" role="dialog" aria-labelledby="myModalLabel" data-backdrop="static"
+     data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="apiadd">添加接口</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal" method="post">
+                    {% csrf_token %}
+                    <label class="control-label">接口名称</label>
+                    <div class="controls">
+                        <input placeholder="" class="form-control" type="text" style="width: 100%;" name="name"
+                               id="name">
+                    </div>
+                    <!-- Text input-->
+                    <label class="control-label">接口地址</label>
+                    <div class="controls">
+                        <input placeholder="" class="form-control" type="text" style="width: 100%" name="url" id="url">
+                    </div>
+                    <label class="control-label">接口类型</label>
+                    <select title="" class="form-control" style="width: 100%" name="type" id="type">
+                        <option value="GET" selected="selected">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="WS">WS</option>
+                    </select>
+                    <label class="control-label">接口头</label>
+                    <div class="controls">
+                        <input placeholder="" class="form-control" type="text" style="width: 100%" name="header" id="header">
+                    </div>
+                    <label class="control-label">所属项目</label>
+                    <select title="" class="form-control" style="width: 100%" name="project" id="project">
+                    </select>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" onclick="formsubmit( 'add')">新增</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal -->
+<div class="modal fade" id="edit" role="dialog" aria-labelledby="myModalLabel" data-backdrop="static"
+     data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">修改接口</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal" method="post">
+                    {% csrf_token %}
+                    <div class="controls">
+                        <input type="hidden" disabled="disabled" name="idedit" id="idedit">
+                    </div>
+                    <label class="control-label">接口名称</label>
+                    <div class="controls">
+                        <input placeholder="" class="form-control" type="text" disabled="disabled" style="width: 100%;"
+                               name="nameedit" id="nameedit">
+                    </div>
+                    <!-- Text input-->
+                    <label class="control-label">接口地址</label>
+                    <div class="controls">
+                        <input placeholder="" class="form-control" type="text" style="width: 100%" name="urledit"
+                               id="urledit">
+                    </div>
+                    <label class="control-label">接口类型</label>
+                    <select title="" class="form-control" style="width: 100%" name="typeedit" id="typeedit">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="WS">WS</option>
+                    </select>
+                    <label class="control-label">接口头</label>
+                    <div class="controls">
+                        <input placeholder="" class="form-control" type="text" style="width: 100%" name="headeredit"
+                               id="headeredit">
+                    </div>
+                    <label class="control-label">所属项目</label>
+                    <select title="" class="form-control" style="width: 100%" name="projectedit" id="projectedit">
+                    </select>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" onclick="formsubmit( 'edit')">修改</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 结果 -->
+<div class="modal fade" id="apiresult" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content message_align">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">×</span></button>
+                <h4 class="modal-title">运行结果</h4>
+            </div>
+            <div class="modal-body">
+                <div id="result_info">
+                    <p>结果如下：</p>
+                    <div>
+                        <table id="table_result"></table>
+                    </div>
+                </div>
+                <div class="error">
+                        <p>错误信息如下：</p>
+                            <p id="errorinfo" class="text-danger"></p>
+                    </div>
+                <p class="text-info" id="running" style="font-size: 15px;">正在处理，请稍候。。。</p>
+                <div class="loadEffect" id="loadEffect" style="display: block;">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <input type="hidden" id="runresult"/>
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- project  Modal -->
+<div class="modal fade" id="projects" role="dialog" aria-labelledby="myModalLabel" data-backdrop="static"
+     data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">项目信息</h4>
+            </div>
+            <div class="modal-body">
+                <table id ="table_project"></table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button class="btn btn-large btn-primary" type="button" data-toggle="modal" data-target="#add_project">新增</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="add_project" role="dialog" aria-labelledby="myModalLabel" data-backdrop="static"
+     data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">添加项目</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal" method="post">
+                    {% csrf_token %}
+                    <label class="control-label" for="projectname">项目名称</label>
+                    <div class="controls">
+                        <input placeholder="项目名称" class="form-control" type="text" style="width: 100%;" name="projectname"
+                               id="projectname">
+                        <p id="error" style="color:red"></p>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="projectsubmit('add')">新增</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="edit_project" role="dialog" aria-labelledby="myModalLabel" data-backdrop="static"
+     data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">修改项目</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal" method="post">
+                    {% csrf_token %}
+                    <input  class="form-control" type="text" style="display:none" name="projecteditid"
+                               id="projecteditid">
+                    <label class="control-label" for="projecteditname">项目名称</label>
+                    <div class="controls">
+                        <input placeholder="项目名称" class="form-control" type="text" style="width: 100%;" name="projecteditname"
+                               id="projecteditname">
+                        <p id="error" style="color:red"></p>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" onclick="projectsubmit('edit')">修改</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="copy_project" role="dialog" aria-labelledby="myModalLabel" data-backdrop="static"
+     data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">复制项目</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal" method="post">
+                    {% csrf_token %}
+                    <p>将项目【<span id="copiedname"></span>】复制到以下项目中</p>
+                    <input  class="form-control" type="text" style="display:none" name="copiedid"
+                               id="copiedid">
+                    <label class="control-label" for="copyname">项目名称</label>
+                    <div class="controls">
+                        <input placeholder="复制项目名称" class="form-control" type="text" style="width: 100%;" name="copyname"
+                               id="copyname">
+                        <p id="error" style="color:red"></p>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" onclick="projectsubmit('copy')">复制</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- common  Modal -->
+<div class="modal fade" id="common" role="dialog" aria-labelledby="myModalLabel" data-backdrop="static"
+     data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="addcommon">添加共有参数</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal" method="post">
+                    {% csrf_token %}
+                    <label class="control-label" for="key">参数key值</label>
+                    <div class="controls">
+                        <input placeholder="参数key值" class="form-control" type="text" style="width: 100%;" name="key"
+                               id="key">
+                        <p id="error" style="color:red"></p>
+                    </div>
+                    <label class="control-label" for="value">参数value值</label>
+                    <div class="controls">
+                        <input placeholder="参数value值" class="form-control" type="text" style="width: 100%;" name="value"
+                               id="value">
+                        <p id="error" style="color:red"></p>
+                    </div>
+                    <label class="control-label" for="commproject">所属项目</label>
+                    <select title="" class="form-control" style="width: 100%" name="commproject" id="commproject">
+                    </select>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" onclick="commonsubmit('add')">新增</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="commonedit" role="dialog" aria-labelledby="myModalLabel" data-backdrop="static"
+     data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">修改参数信息</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal" method="post">
+                    {% csrf_token %}
+                    <div class="controls">
+                        <input type="hidden" disabled="disabled" name="cidedit" id="cidedit">
+                    </div>
+                    <label class="control-label">参数key值</label>
+                    <div class="controls">
+                        <input placeholder="" class="form-control" type="text" disabled="disabled" style="width: 100%;"
+                               name="keyedit" id="keyedit">
+                    </div>
+                    <!-- Text input-->
+                    <label class="control-label">参数value值</label>
+                    <div class="controls">
+                        <input placeholder="" class="form-control" type="text" style="width: 100%" name="valueedit"
+                               id="valueedit">
+                    </div>
+                    <label class="control-label">所属项目</label>
+                    <select title="" class="form-control" style="width: 100%" name="cproedit" id="cproedit">
+                    </select>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" onclick="commonsubmit( 'edit')">修改</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="permission" role="dialog" aria-labelledby="myModalLabel" data-backdrop="static"
+     data-keyboard="false">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" >超级用户密码</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal" method="post">
+                    {% csrf_token %}
+                    <p><strong id="info"></strong>项目，需要超级用户密码，请输入密码</p>
+                    <input type="hidden" disabled="disabled" name="id" id="id">
+                    <label class="control-label">密码</label>
+                    <div class="controls">
+                        <input placeholder="" class="form-control" type="password" style="width: 100%" name="password"
+                               id="password">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" onclick="projectsubmit( 'pwd')">提交</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 信息删除确认 -->
+<div class="modal fade" id="prodel" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content message_align">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">×</span></button>
+                <h4 class="modal-title">提示信息</h4>
+            </div>
+            <div class="modal-body">
+                <p>您确认要删除此项目及项目下面所有的用例信息吗？</p>
+            </div>
+            <div class="modal-footer">
+                <input type="hidden" id="proid"/>
+                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                <a onclick="projectdel2()" class="btn btn-primary" data-dismiss="modal">确定</a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>双师测试平台 | API接口测试</title>
+<meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
+<meta name="description" content="Developed By M Abdur Rokib Promy">
+<meta name="keywords" content="Admin, Bootstrap 3, Template, Theme, Responsive">
+<!-- bootstrap 3.0.2 -->
+<link href="/static/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+<!-- font Awesome -->
+<link href="/static/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+<!-- Ionicons -->
+<link href="/static/css/ionicons.min.css" rel="stylesheet" type="text/css" />
+<!-- Morris chart -->
+<link href="/static/css/morris/morris.css" rel="stylesheet" type="text/css" />
+<!-- jvectormap -->
+<link href="/static/css/jvectormap/jquery-jvectormap-1.2.2.css" rel="stylesheet" type="text/css" />
+<!-- Date Picker -->
+<link href="/static/css/datepicker/datepicker3.css" rel="stylesheet" type="text/css" />
+<!-- fullCalendar -->
+<!-- <link href="css/fullcalendar/fullcalendar.css" rel="stylesheet" type="text/css" /> -->
+<!-- Daterange picker -->
+<link href="/static/css/daterangepicker/daterangepicker-bs3.css" rel="stylesheet" type="text/css" />
+<!-- iCheck for checkboxes and radio inputs -->
+<link href="/static/css/iCheck/all.css" rel="stylesheet" type="text/css" />
+<!-- bootstrap wysihtml5 - text editor -->
+<!-- <link href="css/bootstrap-wysihtml5/bootstrap3-wysihtml5.min.css" rel="stylesheet" type="text/css" /> -->
+<link href='http://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
+<!-- Theme style -->
+<link href="/static/css/style.css" rel="stylesheet" type="text/css" />
+<style type="text/css"></style>
+<body class="skin-black">
+<header class="header"> <a href="/" class="logo">双师测试平台</a>
+  <nav class="navbar navbar-static-top" role="navigation"> <span class="sr-only">www.100tal.com</span></a>
+    <div class="navbar-right">
+      <ul class="nav navbar-nav">
+      </ul>
+    </div>
+  </nav>
+  {% load staticfiles %} 
+  <script src="{% static "js/jquery.min.js"%}"></script> 
+  <script>	
+	function show(x) {
+			//var winRef = window.open("", "_blank");//打开一个新的页
+			alert('test1');
+            var index = x.parentNode.parentNode.rowIndex;
+			var id = $("#list tr:eq("+index+") td:eq(0)").text();
+			$.ajax({
+			 type:'POST',
+			 url:'./showreport',
+			 data:{'id': id,
+				   'csrfmiddlewaretoken': '{{ csrf_token }}',
+				   },
+			 success: function(data){
+				 //window.open(data);
+				 window.location.href = data;
+			 },
+			 error: function (Request, textStatus, errorThrown){
+				 alert(Request.responseText);
+			 }
+			});
+		}
+	</script> 
+</header>
+<div class="wrapper">
+  <aside class="left-side">
+    <section class="sidebar" align="left">
+      <ul class="sidebar-menu">
+        <li> <a href="/api"> <i class="fa fa-dashboard"></i> <span>接口自动化</span> </a></li>
+      </ul>
+    </section>
+  </aside>
+  <aside class="right-side">
+    <section class="content">
+      <div class="row">
+        <div class="col-md-8" style="width:100%">
+          <section class="panel">
+            <header class="panel-heading" style="color:#F00"> 注：无 </header>
+            <input type="button" name="runtest" id="runtest" value="添加" onClick="add()">
+            <input type="button" name="runtest" id="runtest" value="运行" onClick="run()">
+          </section>
+        </div>
+      </div>
+      <form id="form1" name="form1" method="post" action="">
+        {% csrf_token %}
+        <table width="521" border="0" class="table table-bordered">
+        <tbody>
+          <tr>
+            <td width="151">名称</td>
+            <td width="151">URL地址</td>
+            <td width="383">操作</td>
+          </tr>
+          {% for i in result %}
+          <tr>
+            <td width="151">测试接口</td>
+            <td width="151">http://www.baidu.com/test</td>
+            <td width="383"><input type="button" id="edit" value="编辑" onClick="window.open('./result/{{i}}');"></td>
+          </tr>
+          {% endfor %}
+          <tbody>
+        </table>
+      </form>
+      <hr>
+      <div id="status">{{ status }}</div>
+      <!-- row end --> 
+    </section>
+    <!-- /.content -->
+    <div class="footer-main"> Copyright &copy Director, 2017. <a href="http://www.100tal.com/" target="_blank" title="好未来教育集团">好未来教育集团</a>
+  </aside>
+</div>
+</body>
+</html>
